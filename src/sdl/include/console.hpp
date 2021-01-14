@@ -12,7 +12,7 @@
 using boost::numeric::ublas::matrix;
 using boost::numeric::ublas::vector;
 
-namespace console {
+namespace rogue::console {
     namespace internal {
         template<typename T>
         T *logged(T *subject, const std::string &message, std::ostream &stream = std::cout) {
@@ -39,7 +39,7 @@ namespace console {
     auto make_font(const std::string &path, int size) {
         return internal::logged(
                 TTF_OpenFont(path.c_str(), size),
-                "Can not open font at " + path
+                "Can not open fonts at " + path
         );
     }
 
@@ -127,7 +127,7 @@ namespace console {
             );
 
             internal::logged(TTF_Init(), "Can not initialize TTF");
-            _font = make_font("/home/nik/Projects/RogueSdl/assets/fonts/consolas.ttf", 14);
+            _font = make_font("/home/lispberry/projects/rogue/assets/fonts/consolas.ttf", 14);
 
             auto example_glyph = TTF_RenderGlyph_Shaded(_font, 21, make_color(255, 255, 255), make_color(0, 0, 0));
             _glyph_size(0) = example_glyph->w;
