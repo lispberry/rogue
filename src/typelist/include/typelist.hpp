@@ -3,6 +3,8 @@
 
 #include <type_traits>
 
+#include <tuple>
+
 namespace rogue::typelist {
     template <typename ...List>
     struct type_list {};
@@ -11,17 +13,17 @@ namespace rogue::typelist {
     struct sizeT;
 
     template <>
-    struct sizeT<> {
+    struct sizeT<type_list<>> {
         constexpr static int value = 0;
     };
 
     template <typename H, typename ...T>
     struct sizeT<type_list<H, T...>> {
-        constexpr static int value = 1 + sizeT<T...>::value;
+        constexpr static int value = 1 + sizeT<type_list<T...>>::value;
     };
 
     template <typename List>
-    using size_v = size_t<List>::value;
+    using size_v = typename sizeT<List>::value;
 
     template <typename List>
     struct headT;

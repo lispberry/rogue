@@ -6,8 +6,10 @@
 namespace rogue::algebra {
     template<typename T>
     struct field {
-        T *const _pointer;
         const size_t2 _size;
+        T *const _pointer;
+
+        explicit field(size_t2 size) : _size{size}, _pointer{new T[size.x() * size.y()]} {}
 
         constexpr field(std::initializer_list<std::initializer_list<T>> list)
                 : _size{list.begin()->size(), list.size()},
@@ -20,6 +22,10 @@ namespace rogue::algebra {
                     _pointer[i++] = e;
                 }
             }
+        }
+
+        [[nodiscard]] constexpr size_t2 size() const {
+            return _size;
         }
 
         ~field() {

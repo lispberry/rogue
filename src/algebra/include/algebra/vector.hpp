@@ -36,54 +36,80 @@ namespace rogue::algebra {
         using const_iterator = typename std::array<T, Size>::const_iterator;
         using iterator = typename std::array<T, Size>::iterator;
 
-        template <typename ...U>
-        constexpr vector(U ...x) {
-            static_assert(sizeT<U...>::value == Size, "Wrong vector size");
+//        template <typename ...U>
+//        constexpr explicit vector(U  ...z) {
+//            static_assert(sizeT<type_list<U...>>::value == Size, "Wrong vector size");
+//
+//            copyT<Size - 1, Size, T, U...>{}(_data, std::make_tuple<U...>(z...));
+//        }
 
-            copyT<Size - 1, Size, T, U...>{}(_data, std::make_tuple(x...));
+        constexpr vector(std::initializer_list<T> data) {
+            size_t i = 0;
+            for (const auto &e : data) {
+                _data[i++] = e;
+            }
         }
 
         vector &operator=(const vector &) = default;
         vector &operator=(vector &&) noexcept = default;
         vector(vector &&) noexcept = default;
         vector(const vector &) = default;
+        vector(vector &) = default;
         ~vector() = default;
 
-        constexpr T &operator[](size_t idx) const {
+        const T &operator()(size_t idx) const {
             return _data[idx];
         }
 
-        T &operator[](size_t idx) {
+        T &operator()(size_t idx) {
             return _data[idx];
         }
 
-        T &x() { return std::get<0>(_data); }
-        T &y() { return std::get<1>(_data); }
-        T &z() { return std::get<2>(_data); }
-        T &w() { return std::get<3>(_data); }
+        template <size_t Idx>
+        const T &get() const {
+            return std::get<Idx>(_data);
+        }
 
-        [[nodiscard]] constexpr T &x() const { return std::get<0>(_data); }
-        [[nodiscard]] constexpr T &y() const { return std::get<1>(_data); }
-        [[nodiscard]] constexpr T &z() const { return std::get<2>(_data); }
-        [[nodiscard]] constexpr T &w() const { return std::get<3>(_data); }
+        template <size_t Idx>
+        T &get() {
+            return std::get<Idx>(_data);
+        }
+
+        T &x() { return get<0>(); }
+        T &y() { return get<1>(); }
+        T &z() { return get<2>(); }
+        T &w() { return get<3>(); }
+
+        [[nodiscard]] const T &x() const { return get<0>(); }
+        [[nodiscard]] const T &y() const { return get<1>(); }
+        [[nodiscard]] const T &z() const { return get<2>(); }
+        [[nodiscard]] const T &w() const { return get<3>(); }
 
         vector<T, Size> operator +(const vector<T, Size> &v) const {
-            vector<T, Size> result{this};
+            vector<T, Size> result{*this};
             result += v;
             return std::move(result);
         }
 
         vector<T, Size> operator -(const vector<T, Size> &v) const {
-            vector<T, Size> result{this};
+            vector<T, Size> result{*this};
             result -= v;
             return std::move(result);
+        }
+
+        vector<T, Size> scaled(const vector<T, Size> &scale) const {
+            vector<T, Size> result{*this};
+            for (size_t i = 0; i < Size; ++i) {
+                result(i) = operator()(i) * scale(i);
+            }
+            return result;
         }
 
         // mutating members
 
         vector<T, Size> &operator +=(vector<T, Size> v) {
             for (size_t i = 0; i < Size; ++i) {
-                operator[](i) += v(i);
+                operator()(i) += v(i);
             }
 
             return this;
@@ -91,7 +117,7 @@ namespace rogue::algebra {
 
         vector<T, Size> &operator -=(vector<T, Size> v) {
             for (size_t i = 0; i < Size; ++i) {
-                operator[](i) -= v(i);
+                operator()(i) -= v(i);
             }
             return this;
         }
