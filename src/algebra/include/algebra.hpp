@@ -7,7 +7,8 @@ namespace rogue::algebra {
     template<typename T>
     struct field {
         const size_t2 _size;
-        T *const _pointer;
+        T * const _pointer;
+
 
         explicit field(size_t2 size) : _size{size}, _pointer{new T[size.x() * size.y()]} {}
 
@@ -23,6 +24,8 @@ namespace rogue::algebra {
                 }
             }
         }
+
+        field &operator=(const field &) = default;
 
         [[nodiscard]] constexpr size_t2 size() const {
             return _size;
@@ -52,6 +55,10 @@ namespace rogue::algebra {
 
         inline T &operator()(size_t2 v) {
             return operator()(v.x(), v.y());
+        }
+
+        inline void fill(const T &content) {
+            for (size_t i = 0; i < _size.x() * _size.y(); _pointer[i++] = content);
         }
     };
 }

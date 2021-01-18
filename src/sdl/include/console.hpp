@@ -50,23 +50,30 @@ namespace rogue::console {
             transparent = make_color(0, 0, 0, 0);
     }
 
-    struct ColoredChar {
+    struct colored_char {
         uint16_t character;
         SDL_Color foreground, background;
 
-        ColoredChar()= default;
+        colored_char() = default;
+        ~colored_char() = default;
+        colored_char &operator=(const colored_char &) = default;
+        colored_char &operator=(colored_char &&) = default;
 
-        constexpr ColoredChar(uint16_t character, SDL_Color fg, SDL_Color bg)
+        colored_char(const colored_char &) = default;
+        colored_char(colored_char &&) = default;
+
+        colored_char(uint16_t character, SDL_Color fg = color::white, SDL_Color bg = color::black)
             : character(character), foreground(fg), background(bg) {}
     };
 
 
 
-    inline algebra::field<ColoredChar> colored(
+    using colored_field = algebra::field<colored_char>;
+    inline colored_field colored(
         const std::string &text,
         SDL_Color foreground = color::white,
         SDL_Color background = color::black,
-        ColoredChar default_character = ColoredChar{static_cast<uint16_t>(' '), color::transparent, color::transparent}
+        colored_char default_character = colored_char{static_cast<uint16_t>(' '), color::transparent, color::transparent}
     ) {
         std::vector<std::string> lines;
         boost::split(lines, text, boost::is_any_of("\n"));
@@ -76,13 +83,13 @@ namespace rogue::console {
             if (line.size() > width) width = line.size();
         }
 
-        algebra::field<ColoredChar> result{algebra::size_t2{width, lines.size()}};
+        algebra::field<colored_char> result{algebra::size_t2{width, lines.size()}};
 
         algebra::size_t2 v{0, 0};
         for (const auto &line : lines) {
             v.x() = 0;
             for (const auto &c : line) {
-                result(v) = ColoredChar{static_cast<uint16_t>(c), foreground, background};
+                result(v) = colored_char{static_cast<uint16_t>(c), foreground, background};
 
                 v.x()++;
             }
@@ -94,14 +101,14 @@ namespace rogue::console {
         return result;
     }
 
-    struct Window {
+    struct window {
         TTF_Font *_font;
         algebra::size_t2 _glyph_size{0, 0};
 
         SDL_Window *_window;
         SDL_Renderer *_renderer;
 
-        inline Window(const std::string &title, int w, int h) {
+        inline window(const std::string &title, int w, int h) {
             internal::logged(SDL_Init(SDL_INIT_EVERYTHING), "Can not initialize SDL");
 
             _window = internal::logged(
@@ -130,13 +137,13 @@ namespace rogue::console {
             delete example_glyph;
         }
 
-        ~Window() {
+        ~window() {
             SDL_DestroyWindow(_window);
             SDL_Quit();
         }
     };
 
-    inline void render_matrix(const Window &window, const algebra::field<ColoredChar> &field) {
+    inline void render_field(const window &window, const colored_field &field) {
         SDL_RenderClear(window._renderer);
 
         algebra::size_t2 v{0, 0};
