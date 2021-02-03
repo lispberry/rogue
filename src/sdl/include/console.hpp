@@ -50,23 +50,23 @@ namespace rogue::console {
             transparent = make_color(0, 0, 0, 0);
     }
 
-    struct ColoredChar {
+    struct colored_char {
         uint16_t character;
         SDL_Color foreground, background;
 
-        ColoredChar()= default;
+        colored_char()= default;
 
-        constexpr ColoredChar(uint16_t character, SDL_Color fg, SDL_Color bg)
+        constexpr colored_char(uint16_t character, SDL_Color fg, SDL_Color bg)
             : character(character), foreground(fg), background(bg) {}
     };
 
 
 
-    inline algebra::field<ColoredChar> colored(
+    inline algebra::field<colored_char> colored(
         const std::string &text,
         SDL_Color foreground = color::white,
         SDL_Color background = color::black,
-        ColoredChar default_character = ColoredChar{static_cast<uint16_t>(' '), color::transparent, color::transparent}
+        colored_char default_character = colored_char{static_cast<uint16_t>(' '), color::transparent, color::transparent}
     ) {
         std::vector<std::string> lines;
         boost::split(lines, text, boost::is_any_of("\n"));
@@ -76,13 +76,13 @@ namespace rogue::console {
             if (line.size() > width) width = line.size();
         }
 
-        algebra::field<ColoredChar> result{algebra::size_t2{width, lines.size()}};
+        algebra::field<colored_char> result{algebra::size_t2{width, lines.size()}};
 
         algebra::size_t2 v{0, 0};
         for (const auto &line : lines) {
             v.x() = 0;
             for (const auto &c : line) {
-                result(v) = ColoredChar{static_cast<uint16_t>(c), foreground, background};
+                result(v) = colored_char{static_cast<uint16_t>(c), foreground, background};
 
                 v.x()++;
             }
@@ -93,17 +93,26 @@ namespace rogue::console {
 
         return result;
     }
+    
+    struct sdl {
+        sdl() {
+            internal::logged(SDL_Init(SDL_INIT_EVERYTHING), "Can not initialize SDL");
+            internal::logged(TTF_Init(), "Can not initialize TTF");
+        }
+        
+        ~sdl() {
+            SDL_Quit();
+        }
+    };
 
-    struct Window {
+    struct window {
         TTF_Font *_font;
         algebra::size_t2 _glyph_size{0, 0};
 
         SDL_Window *_window;
         SDL_Renderer *_renderer;
 
-        inline Window(const std::string &title, int w, int h) {
-            internal::logged(SDL_Init(SDL_INIT_EVERYTHING), "Can not initialize SDL");
-
+        inline window(const std::string &title, int w, int h) {
             _window = internal::logged(
                 SDL_CreateWindow(
                     title.c_str(),
@@ -121,22 +130,20 @@ namespace rogue::console {
                 ),
                 "Can not initialize renderer"
             );
-
-            internal::logged(TTF_Init(), "Can not initialize TTF");
-            _font = make_font("/home/lispberry/projects/rogue/assets/fonts/consolas.ttf", 14);
+            _font = make_font("/home/nik/Projects/rogue/assets/fonts/consolas.ttf", 14);
 
             auto example_glyph = TTF_RenderGlyph_Shaded(_font, 21, make_color(255, 255, 255), make_color(0, 0, 0));
             _glyph_size = algebra::size_t2{static_cast<size_t>(example_glyph->w), static_cast<size_t>(example_glyph->h)};
             delete example_glyph;
         }
 
-        ~Window() {
+        ~window() {
             SDL_DestroyWindow(_window);
-            SDL_Quit();
+            SDL_DestroyRenderer(_renderer);
         }
     };
 
-    inline void render_matrix(const Window &window, const algebra::field<ColoredChar> &field) {
+    inline void render_matrix(const window &window, const algebra::field<colored_char> &field) {
         SDL_RenderClear(window._renderer);
 
         algebra::size_t2 v{0, 0};
@@ -160,7 +167,7 @@ namespace rogue::console {
                 internal::render_texture(
                     texture,
                     window._renderer,
-                    window._glyph_size.scaled(v)
+                    algebra::scaled(window._glyph_size, v)
                 );
 
                 delete surface;

@@ -74,7 +74,7 @@ namespace rogue::algebra {
         T &get() {
             return std::get<Idx>(_data);
         }
-
+        
         T &x() { return get<0>(); }
         T &y() { return get<1>(); }
         T &z() { return get<2>(); }
@@ -95,14 +95,6 @@ namespace rogue::algebra {
             vector<T, Size> result{*this};
             result -= v;
             return std::move(result);
-        }
-
-        vector<T, Size> scaled(const vector<T, Size> &scale) const {
-            vector<T, Size> result{*this};
-            for (size_t i = 0; i < Size; ++i) {
-                result(i) = operator()(i) * scale(i);
-            }
-            return result;
         }
 
         // mutating members
@@ -135,6 +127,14 @@ namespace rogue::algebra {
         [[nodiscard]] const_iterator begin() const { return _data.begin(); }
         [[nodiscard]] const_iterator end() const { return _data.end(); }
     };
+    
+    template<typename T, size_t Size>
+    vector<T, Size> scaled(vector<T, Size> self, const vector<T, Size> &scale) {
+        for (size_t i = 0; i < Size; ++i) {
+            self(i) *= scale(i);
+        }
+        return self;
+    }
 
     template<class H, typename ...T>
     vector(H head, T ...tail) -> vector<H, 1 + sizeT<T...>::value>;
