@@ -1,13 +1,37 @@
 #include <console.hpp>
 #include <algebra.hpp>
-//#include <ecs.hpp>
+#include <ecs.hpp>
+#include <boost/hana.hpp>
 
 using namespace rogue;
 
-//struct positioned {
-//    algebra::size_t2 position;
-//};
-//
+DEFINE_COMPONENT(
+    positioned,
+    (algebra::size_t2, position)
+)
+
+
+
+template<int I>
+struct _reference_synchronize {
+    void operator()(raw_positioned<ecs::just> &from, raw_positioned<ecs::pointer> &to) {
+        to.get<I>() = &from.get<I>();
+        _reference_synchronize<I - 1>{}(from, to);
+    }
+};
+
+template<>
+struct _reference_synchronize<-1> {
+    void operator()(const raw_positioned<ecs::just> &from, raw_positioned<ecs::pointer> &to) {}
+};
+
+//template<template<template<typename __> typename _> typename T>
+auto reference_replace(raw_positioned<ecs::just> &object) {
+    raw_positioned<ecs::pointer> result{};
+    _reference_synchronize<raw_positioned<ecs::just>::fields_number>{}(object, result);
+    return result;
+}
+
 //struct displayed {
 //    console::colored_char character;
 //};
@@ -30,13 +54,13 @@ using namespace rogue;
 //}
 
 int main() {
-    console::sdl sdl{};
-
-    console::window window("rogue", 640, 480);
-    console::render_field(
-        window,
-        console::colored("Hello, world!\nTest line", console::color::black, console::color::white));
-    SDL_Delay(5000);
+//    console::sdl sdl{};
+//
+//    console::window window("rogue", 640, 480);
+//    console::render_field(
+//        window,
+//        console::colored("Hello, world!\nTest line", console::color::black, console::color::white));
+//    SDL_Delay(5000);
 
     // create systems from place_characters and render_field
 
@@ -56,6 +80,17 @@ int main() {
 //    });
 //
 //    manager.start_game();
+    
+    std::tuple a{1, 2, "1"};
+    
+    std::get<1>(a);
+
+    raw_positioned<ecs::just> p{algebra::size_t2{0ul, 1ul}};
+    
+    auto f = reference_replace(p);
+    f.position->x() += 1;
+    
+    std::cout << algebra::to_string(p.position);
 
     return 0;
 }

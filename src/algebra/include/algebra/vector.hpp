@@ -114,13 +114,13 @@ namespace rogue::algebra {
             return this;
         }
 
-        template <typename Exp>
-        vector &operator=(const Exp &exp) {
-            size_t size = _data.size();
-            for (size_t i = 0; i < size; i++) {
-                _data[i] = exp[i];
-            }
-        }
+//        template <typename Exp>
+//        vector &operator=(const Exp &exp) {
+//            size_t size = _data.size();
+//            for (size_t i = 0; i < size; i++) {
+//                _data[i] = exp[i];
+//            }
+//        }
 
         iterator begin() { return _data.begin(); }
         iterator end() { return _data.end(); }
@@ -187,7 +187,7 @@ namespace rogue::algebra {
     template<typename T, size_t Size>
     std::string to_string(const vector<T, Size> &v) {
         std::vector<std::string> strings{};
-        for (size_t i = 0; i < Size; ++i) strings.push_back(std::to_string(v._pointer[i]));
+        for (size_t i = 0; i < Size; ++i) strings.push_back(std::to_string(v(i)));
         return (boost::format("{%1%}") % boost::algorithm::join(strings, ", ")).str();
     }
 }
