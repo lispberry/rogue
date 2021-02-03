@@ -62,7 +62,8 @@ namespace rogue::console {
 
 
 
-    inline algebra::field<colored_char> colored(
+    using colored_field = algebra::field<colored_char>;
+    inline colored_field colored(
         const std::string &text,
         SDL_Color foreground = color::white,
         SDL_Color background = color::black,
@@ -143,7 +144,7 @@ namespace rogue::console {
         }
     };
 
-    inline void render_matrix(const window &window, const algebra::field<colored_char> &field) {
+    inline void render_field(const window &window, const colored_field &field) {
         SDL_RenderClear(window._renderer);
 
         algebra::size_t2 v{0, 0};
