@@ -15,10 +15,21 @@ namespace rogue::ecs {
         using type = T*;
     };
     
-    template<typename T...>
+    template<typename ...T>
     struct typelist;
     
-    template<size_t i,
+    template<size_t I, typename T>
+    struct at;
+    
+    template<size_t I, typename Head, typename ...Tail>
+    struct at<I, typelist<Head, Tail...>> {
+        using value = typename at<I - 1, typelist<Tail...>>::value;
+    };
+    
+    template<typename Head>
+    struct at<0, typelist<Head>> {
+        using value = Head;
+    };
 };
 
 #define DEFINE_COMPONENT(NAME, FIELD_PAIR)                                 \
@@ -26,15 +37,16 @@ namespace rogue::ecs {
     struct raw_##NAME {                                                    \
         typename F<GET_0 FIELD_PAIR>::type GET_1 FIELD_PAIR;               \
                                                                            \
-        template<size_t i>                                                 \
-        void get() {                                                       \
+        template<size_t i, typename T>                                                 \
+        T get() {                                                          \
         }                                                                  \
                                                                            \
-        template<>                                                         \
-        GET_0 FIELD_PAIR &get<0>() {                                       \
+        template<typename T = at<0, field_types>::value>                                                        \
+        T &get<0>() {                                       \
             return GET_1 FIELD_PAIR;                                       \
         }                                                                  \
         static constexpr size_t fields_number = 1;                         \
+        using field_types = type_list<GET_0 FIELD_PAIR>;                   \
     };                                                                     \
     using NAME = raw_##NAME<rogue::ecs::just>;
 
